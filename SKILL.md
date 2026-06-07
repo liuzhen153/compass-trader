@@ -24,6 +24,118 @@
 
 ---
 
+## Python 脚本引擎
+
+本 skill 内置 6 个 Python 脚本，位于 `scripts/` 目录下，可通过命令行直接调用。**Claude 在执行交易相关任务时，应优先使用这些脚本获取数据和操作账户**，而不是依赖 WebSearch 获取行情。
+
+### 脚本速查
+
+| 脚本 | 命令格式 | 用途 |
+|------|---------|------|
+| `market_data.py` | `python3 scripts/market_data.py <cmd>` | A股实时行情/历史K线/指数/搜索 |
+| `risk.py` | `python3 scripts/risk.py <cmd>` | 凯利公式/仓位计算/止损止盈 |
+| `portfolio.py` | `python3 scripts/portfolio.py <cmd>` | 模拟交易执行/持仓管理/快照 |
+| `backtest.py` | `python3 scripts/backtest.py <cmd>` | 历史策略回测 (Backtrader) |
+| `reporter.py` | `python3 scripts/reporter.py <cmd>` | 生成周报/月报/交易记录 .md |
+| **`dashboard.py`** | `python3 scripts/dashboard.py` | **启动本地 HTML 仪表盘 (端口 8765)** |
+|------|---------|------|
+| `market_data.py` | `python3 scripts/market_data.py <cmd>` | A股实时行情/历史K线/指数/搜索 |
+| `risk.py` | `python3 scripts/risk.py <cmd>` | 凯利公式/仓位计算/止损止盈 |
+| `portfolio.py` | `python3 scripts/portfolio.py <cmd>` | 模拟交易执行/持仓管理/快照 |
+| `backtest.py` | `python3 scripts/backtest.py <cmd>` | 历史策略回测 (Backtrader) |
+| `reporter.py` | `python3 scripts/reporter.py <cmd>` | 生成周报/月报/交易记录 .md |
+
+### market_data.py — 行情数据
+
+```
+python3 scripts/market_data.py quote 600519              # 实时行情
+python3 scripts/market_data.py history 600519 2026-01-01 2026-06-07  # 历史K线
+python3 scripts/market_data.py index 000300               # 沪深300指数
+python3 scripts/market_data.py search 茅台                 # 搜索股票代码
+python3 scripts/market_data.py batch 600519,000858,300750  # 批量行情
+```
+
+数据源：新浪财经 API（a股实时行情 + 历史K线）。
+
+### risk.py — 风控计算
+
+```
+python3 scripts/risk.py kelly 0.55 2.0                    # 凯利公式(胜率55%,盈亏比2)
+python3 scripts/risk.py size 1000000 1680 0.02 0.08        # 建议股数(100万,股价1680,风险2%,止损8%)
+python3 scripts/risk.py stop 1680                         # 硬止损价(-8%)
+python3 scripts/risk.py stop 1680 12.5 atr                 # ATR止损
+python3 scripts/risk.py profit 1680 1545.6 2.0             # 止盈价(入场1680,止损1545.6,盈亏比2)
+python3 scripts/risk.py check 600519 白酒                   # 检查仓位上限
+python3 scripts/risk.py time-stop                          # 时间止损检查
+```
+
+### portfolio.py — 交易执行
+
+```
+python3 scripts/portfolio.py init 1000000                  # 初始化100万模拟账户
+python3 scripts/portfolio.py buy 600519 贵州茅台 100 1680 "估值偏低" high 1512 2016 白酒
+python3 scripts/portfolio.py sell 600519 1750 "达到止盈"
+python3 scripts/portfolio.py summary                       # 账户概况
+python3 scripts/portfolio.py positions                     # 持仓明细
+python3 scripts/portfolio.py trades                        # 交易历史
+python3 scripts/portfolio.py industry                      # 行业暴露
+python3 scripts/portfolio.py snapshot                      # 记录当日快照
+python3 scripts/portfolio.py update-all-prices             # 批量更新持仓现价
+```
+
+### backtest.py — 策略回测
+
+```
+python3 scripts/backtest.py list                           # 列出内置策略
+python3 scripts/backtest.py run 600519 sma_cross 2023-01-01 2026-06-07 1000000
+python3 scripts/backtest.py run 600519 momentum 2024-01-01 2026-06-07 1000000 period=20
+python3 scripts/backtest.py run 600519 mean_reversion 2024-01-01 2026-06-07 1000000
+```
+
+内置策略：`sma_cross`(均线交叉), `momentum`(动量突破), `mean_reversion`(均值回归)
+
+### reporter.py — 报告生成
+
+```
+python3 scripts/reporter.py weekly                        # 生成本周周报
+python3 scripts/reporter.py monthly                       # 生成本月月报
+python3 scripts/reporter.py trade TRD-20260607-001        # 生成单笔交易记录
+python3 scripts/reporter.py summary                       # 账户摘要(仅终端)
+```
+
+### dashboard.py — 可视化仪表盘
+
+```
+python3 scripts/dashboard.py                    # 启动（默认端口 8765）
+python3 scripts/dashboard.py --port 9999         # 自定义端口
+```
+
+浏览器打开 `http://localhost:8765`，实时展示：
+- 📊 资产曲线（总资产 vs 快照历史）
+- 💰 账户概况卡片（总资产/现金/市值/收益）
+- 📋 持仓明细表格（现价/盈亏/占比）
+- 🥧 行业分布饼图
+- 📜 交易记录时间线
+- 🔄 点击「更新行情」按钮从新浪 API 刷新持仓现价
+- ⏱️ 每 30 秒自动刷新数据
+
+**数据完全来自 `data/*.json`，与命令行交易操作共享同一份数据。**
+
+### 数据目录
+
+所有账户和交易数据存储在 `data/` 目录下的 JSON 文件中：
+
+| 文件 | 内容 |
+|------|------|
+| `data/account.json` | 账户资金（初始资金/现金余额） |
+| `data/positions.json` | 当前持仓（标的/成本价/现价/行业） |
+| `data/trades.json` | 交易历史（含止损止盈/置信度/理由） |
+| `data/tracker.json` | 每日快照（用于周报/月报计算） |
+
+---
+
+---
+
 ## 核心输出规则：始终产出 .md 文档
 
 **每一次绩效报告必须落地为一个 `.md` 文件。**
@@ -89,12 +201,24 @@ engine: compass-trader v1.0.0
 
 ```
 每日流程（可定时触发）：
-1. 获取自选标的实时行情（WebSearch/东方财富网页）
+1. python3 scripts/market_data.py batch <自选列表>     # 获取实时行情
 2. 运行产业链+估值+宏观分析（委托给 Financial Compass）
-3. 生成操作建议（买入/卖出/持有/加减仓/观望）
-4. 用户确认（半自动模式）或自动执行（全自动模拟模式）
-5. 记录操作到绩效数据库
-6. 每周生成绩效报告
+3. python3 scripts/risk.py size <总资产> <股价>         # 计算建议仓位
+4. python3 scripts/risk.py stop <入场价>                # 计算止损
+5. 生成操作建议（买入/卖出/持有/加减仓/观望）
+6. 用户确认（半自动模式）或自动执行（全自动模拟模式）
+7. python3 scripts/portfolio.py buy/sell ...             # 执行交易
+8. python3 scripts/portfolio.py snapshot                 # 记录快照
+9. python3 scripts/reporter.py weekly                    # 周末生成绩效报告
+```
+
+**数据流**：
+```
+market_data.py (行情) ──→ Financial Compass (分析) ──→ risk.py (仓位)
+    ↓                                                       ↓
+reporter.py (报告) ←── portfolio.py (执行) ←────────── 用户确认
+    ↓
+  周报/月报 .md + data/*.json (持久化)
 ```
 
 ---
@@ -211,13 +335,24 @@ engine: compass-trader v1.0.0
 
 ## 五、触发方式
 
-用户说以下任意表达即可触发本 Skill：
+用户说以下任意表达即可触发本 Skill，对应的脚本调用：
 
-- "模拟盘操作[标的]" → 生成交易指令
-- "本周绩效" / "本月绩效" → 绩效报告
-- "当前持仓" / "帮我看看持仓" → 持仓分析
-- "回测[策略]" → 历史回测
-- "交易记录" → 查看历史交易
+| 用户说 | Claude 应执行 |
+|------|-------------|
+| "模拟盘操作[标的]" / "买入[标的]" | ① Financial Compass 分析 → ② `risk.py size/stop` → ③ `portfolio.py buy` → ④ 生成交易 .md |
+| "卖出[标的]" | `portfolio.py sell <ticker> <price> "<reason>"` |
+| "本周绩效" / "本周报告" | `reporter.py weekly` → 阅读生成的 .md → AI 反思 |
+| "本月绩效" / "本月报告" | `reporter.py monthly` → 阅读生成的 .md → AI 反思 |
+| "当前持仓" / "帮我看看持仓" | ① `portfolio.py update-all-prices` → ② `portfolio.py summary` + `positions` + `industry` |
+| "回测[标的] [策略]" | `backtest.py run <ticker> <strategy> <start> <end>` |
+| "回测有哪些策略" | `backtest.py list` |
+| "交易记录" | `portfolio.py trades` |
+| "[标的] 行情" / "[标的] 多少钱" | `market_data.py quote <ticker>` |
+| "搜索[关键词]" | `market_data.py search <keyword>` |
+| "计算仓位 [标的]" | ① `market_data.py quote <ticker>` → ② `risk.py size` |
+| "记录快照" | `portfolio.py snapshot` |
+| "重置账户" | `portfolio.py init [资金]` |
+| "打开仪表盘" / "仪表盘" / "dashboard" | `python3 scripts/dashboard.py` 启动服务 → `open http://localhost:8765` |
 
 ---
 
