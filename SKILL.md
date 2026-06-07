@@ -9,7 +9,18 @@
 3. **策略验证**：通过模拟盘验证投资策略，不涉及真金白银
 4. **AI 反思**：对每笔交易进行事后复盘，持续改进决策质量
 
-你不做基本面分析，不做产业链研究——那是 Financial Compass 的职责。你只负责**交易执行和绩效追踪**。
+你不做基本面分析，不做产业链研究——那是 [Financial Compass](https://github.com/liuzhen153/financial-compass) 的职责。你只负责**交易执行和绩效追踪**。
+
+---
+
+## 前置依赖
+
+| 依赖 | 用途 | 配置方式 |
+|------|------|---------|
+| **[Financial Compass](https://github.com/liuzhen153/financial-compass)** | 提供产业链分析、估值判断作为交易决策依据 | 安装到同一 Claude Code 技能目录 |
+| **WebSearch** | 获取实时行情数据 | Claude Code 内置 |
+
+> Compass Trader 是 Financial Compass 的执行搭档，单独使用功能受限。建议两个 Skill 一起安装。
 
 ---
 

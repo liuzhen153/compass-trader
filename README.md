@@ -32,6 +32,20 @@ Financial Compass          Compass Trader
 - 周报/月报：`.md` 文件，含 YAML 元信息
 - 交易记录：结构化 JSON + `.md` 文件
 
+## 前置依赖
+
+| 依赖 | 说明 |
+|------|------|
+| [Financial Compass](https://github.com/liuzhen153/financial-compass) | 提供分析结论作为交易决策依据 |
+| Claude Code | 运行环境 |
+
+## 安装
+
+```bash
+# 克隆到 Claude Code 技能目录
+git clone https://github.com/liuzhen153/compass-trader.git ~/.claude/skills/compass-trader
+```
+
 ## 免责声明
 
 模拟交易工具，不构成投资建议。模拟盘结果不保证实盘表现。
